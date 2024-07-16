@@ -1,3 +1,7 @@
+const healthySound = new Audio('Sounds/good.mp3');
+const moderateSound = new Audio('Sounds/okay.mp3');
+const unhealthySound = new Audio('Sounds/bad.mp3');
+
 document.getElementById('fetch-data').addEventListener('click', function() {
     const barcodes = document.getElementById('barcodes').value.split(' ').map(code => code.trim());
     const productPromises = barcodes.map(barcode => fetchProductData(barcode));
@@ -106,7 +110,7 @@ function displayProductDetails(products) {
             <p><strong>Zucker pro 100g:</strong> ${sugarsPer100g} g</p>
             <p><strong>Salz pro 100g:</strong> ${saltPer100g} g</p>
             <p><strong>Nutri-Score:</strong> ${nutriScore}</p>
-            <p><strong>Gesundheitsbewertung:</strong> ${evaluateHealthiness(nutriScore, caloriesPer100g, fatPer100g, sugarsPer100g, saltPer100g)}</p>
+            <p><strong>Gesundheitsbewertung:</strong> <div id="gesundcolor">${evaluateHealthiness(nutriScore, caloriesPer100g, fatPer100g, sugarsPer100g, saltPer100g)} </div></p>
         `;
 
         productDetailsContainer.appendChild(productInfo);
@@ -147,7 +151,37 @@ function changeBackgroundColor(averageNutriScore) {
         body.style.backgroundColor = '#FFD700'; // Gold for moderately healthy
     } else if (averageNutriScore >= 4 && averageNutriScore <= 5) {
         body.style.backgroundColor = '#FF6347'; // Tomato for unhealthy
+
     } else {
         body.style.backgroundColor = '#F0F0F0'; // Default background color
     }
+}
+
+function evaluateHealthiness(nutriScore, calories, fat, sugars, salt) {
+    switch (nutriScore) {
+        case 'A':
+            playSound(healthySound);
+            return 'Sehr gesund';
+        case 'B':
+            playSound(healthySound);
+            return 'Gesund';
+        case 'C':
+            playSound(moderateSound);
+            return 'Mäßig gesund';
+        case 'D':
+            playSound(unhealthySound);
+            return 'Ungesund';
+        case 'E':
+            playSound(unhealthySound);
+            return 'Sehr ungesund';
+        default:
+            return 'Unbekannt';
+    }
+}
+
+function playSound(sound) {
+
+    // Play the specified sound
+    sound.currentTime = 0; // Rewind to the beginning (in case it's already playing)
+    sound.play();
 }
