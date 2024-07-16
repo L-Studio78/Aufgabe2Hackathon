@@ -1,7 +1,3 @@
-const healthySound = new Audio('Sounds/good.mp3');
-const moderateSound = new Audio('Sounds/okay.mp3');
-const unhealthySound = new Audio('Sounds/bad.mp3');
-
 document.getElementById('fetch-data').addEventListener('click', function() {
     const barcodes = document.getElementById('barcodes').value.split(' ').map(code => code.trim());
     const productPromises = barcodes.map(barcode => fetchProductData(barcode));
@@ -33,8 +29,30 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         changeBackgroundColor(averageNutriScore);
 
         displayProductDetails(products);
+        updateProgressBars(caloriesPer100g, sugarsPer100g, fatsPer100g, saltsPer100g);
     });
 });
+
+function updateProgressBars(calories, sugars, fats, salts) {
+    const totalCalories = calories.reduce((a, b) => a + b, 0);
+    const totalSugars = sugars.reduce((a, b) => a + b, 0);
+    const totalFats = fats.reduce((a, b) => a + b, 0);
+    const totalSalts = salts.reduce((a, b) => a + b, 0);
+
+    updateProgressBar('calories-progress', 'calories-text', totalCalories, 2000);
+    updateProgressBar('sugar-progress', 'sugar-text', totalSugars, 50);
+    updateProgressBar('fat-progress', 'fat-text', totalFats, 70);
+    updateProgressBar('salt-progress', 'salt-text', totalSalts, 6);
+}
+
+function updateProgressBar(progressBarId, textId, value, maxValue) {
+    const progressBar = document.getElementById(progressBarId);
+    const text = document.getElementById(textId);
+    const percentage = Math.min(100, (value / maxValue) * 100);
+
+    progressBar.querySelector('span').innerText = `${textId.split('-')[0]}: ${value}/${maxValue}`;
+    progressBar.querySelector('::before').style.width = percentage + '%';
+}
 
 function fetchProductData(barcode) {
     return fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
@@ -81,107 +99,137 @@ function createChart(canvasId, label, labels, data, backgroundColor, borderColor
             scales: {
                 y: {
                     beginAtZero: true,
-                    suggestedMax: maxYValue // Set the maximum value for y-axis
+                    max: maxYValue
                 }
             }
         }
     });
 }
 
-function displayProductDetails(products) {
-    const productDetailsContainer = document.getElementById('product-details');
-    productDetailsContainer.innerHTML = ''; // Clear previous details
+function changeBackgroundColor(nutriScore) {
+    const body = document.body;
+    let color = '';
 
-    products.forEach(product => {
-        const productInfo = document.createElement('div');
-        productInfo.className = 'product-info';
-        
-        const productName = product.product_name;
-        const caloriesPer100g = calculatePer100g(product.nutriments && product.nutriments.energy_value, product.nutriments && product.nutriments.energy_unit);
-        const fatPer100g = calculatePer100g(product.nutriments && product.nutriments.fat_value, product.nutriments && product.nutriments.fat_unit);
-        const sugarsPer100g = calculatePer100g(product.nutriments && product.nutriments.sugars_value, product.nutriments && product.nutriments.sugars_unit);
-        const saltPer100g = calculatePer100g(product.nutriments && product.nutriments.salt_value, product.nutriments && product.nutriments.salt_unit);
-        const nutriScore = product.nutriscore_grade ? product.nutriscore_grade.toUpperCase() : 'Keine Angabe';
-
-        productInfo.innerHTML = `
-            <h2>${productName}</h2>
-            <p><strong>Kalorien pro 100g:</strong> ${caloriesPer100g} kcal</p>
-            <p><strong>Fett pro 100g:</strong> ${fatPer100g} g</p>
-            <p><strong>Zucker pro 100g:</strong> ${sugarsPer100g} g</p>
-            <p><strong>Salz pro 100g:</strong> ${saltPer100g} g</p>
-            <p><strong>Nutri-Score:</strong> ${nutriScore}</p>
-            <p><strong>Gesundheitsbewertung:</strong> <div id="gesundcolor">${evaluateHealthiness(nutriScore, caloriesPer100g, fatPer100g, sugarsPer100g, saltPer100g)} </div></p>
-        `;
-
-        productDetailsContainer.appendChild(productInfo);
-    });
-}
-
-function evaluateHealthiness(nutriScore, calories, fat, sugars, salt) {
-    // Eine einfache Bewertungslogik basierend auf Nutri-Score und Nährwertangaben pro 100g
-    if (nutriScore === 'A') {
-        return 'Sehr gesund';
-    } else if (nutriScore === 'B') {
-        return 'Gesund';
-    } else if (nutriScore === 'C') {
-        return 'Mäßig gesund';
-    } else if (nutriScore === 'D') {
-        return 'Ungesund';
-    } else if (nutriScore === 'E') {
-        return 'Sehr ungesund';
-    } else {
-        return 'Unbekannt';
+    switch (nutriScore) {
+        case 1:
+            color = '#4CAF50';
+            break;
+        case 2:
+            color = '#8BC34A';
+            break;
+        case 3:
+            color = '#FFC107';
+            break;
+        case 4:
+            color = '#FF9800';
+            break;
+        case 5:
+            color = '#F44336';
+            break;
+        default:
+            color = '#FFFFFF';
+            break;
     }
+
+    body.style.backgroundColor = color;
 }
 
 function calculateAverageNutriScore(nutriScores) {
-    if (nutriScores.length === 0) return 0;
-
-    const sum = nutriScores.reduce((acc, score) => acc + score, 0);
-    return sum / nutriScores.length;
+    const sum = nutriScores.reduce((a, b) => a + b, 0);
+    return Math.round(sum / nutriScores.length);
 }
 
-function changeBackgroundColor(averageNutriScore) {
-    const body = document.body;
+document.addEventListener('DOMContentLoaded', function() {
+    displayProjectSelection();
+    setInterval(() => {
+        changeSlide(1); // Wechselt zur nächsten Folie
+    }, 3000); // Wechselt alle 3 Sekunden
+});
 
-    // Change background color based on average Nutri-Score
-    if (averageNutriScore >= 1 && averageNutriScore <= 2) {
-        body.style.backgroundColor = '#98FB98'; // Light green for very healthy
-    } else if (averageNutriScore >= 3 && averageNutriScore <= 3.5) {
-        body.style.backgroundColor = '#FFD700'; // Gold for moderately healthy
-    } else if (averageNutriScore >= 4 && averageNutriScore <= 5) {
-        body.style.backgroundColor = '#FF6347'; // Tomato for unhealthy
+let currentSlideIndex = 0;
 
-    } else {
-        body.style.backgroundColor = '#F0F0F0'; // Default background color
+function displayProjectSelection() {
+    const projects = [
+        {
+            name: "Projekt 1",
+            description: "Beschreibung des Projekts 1",
+            barcode: "1234567890123",
+            imageUrl: "path/to/image1.jpg" // Pfad zum Bild des Projekts
+        },
+        {
+            name: "Projekt 2",
+            description: "Beschreibung des Projekts 2",
+            barcode: "2345678901234",
+            imageUrl: "path/to/image2.jpg"
+        },
+        {
+            name: "Projekt 3",
+            description: "Beschreibung des Projekts 3",
+            barcode: "3456789012345",
+            imageUrl: "path/to/image3.jpg"
+        }
+    ];
+
+    const projectSelectionContainer = document.getElementById('project-selection');
+    projectSelectionContainer.innerHTML = ''; // Clear previous content
+
+    projects.forEach((project, index) => {
+        const projectDiv = document.createElement('div');
+        projectDiv.className = 'project';
+
+        projectDiv.innerHTML = `
+            <img src="${project.imageUrl}" alt="${project.name}">
+            <h3>${project.name}</h3>
+            <p>${project.description}</p>
+            <button onclick="fetchProjectData('${project.barcode}')">Daten abrufen</button>
+        `;
+
+        projectSelectionContainer.appendChild(projectDiv);
+    });
+
+    showSlide(currentSlideIndex);
+}
+
+function showSlide(index) {
+    const slides = document.getElementsByClassName('project');
+    if (index >= slides.length) { currentSlideIndex = 0; }
+    if (index < 0) { currentSlideIndex = slides.length - 1; }
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].style.transform = `translateX(${(-currentSlideIndex * 100)}%)`;
     }
 }
 
-function evaluateHealthiness(nutriScore, calories, fat, sugars, salt) {
+function changeSlide(direction) {
+    currentSlideIndex += direction;
+    showSlide(currentSlideIndex);
+}
+
+function fetchProjectData(barcode) {
+    // Funktion zum Abrufen von Projektdaten basierend auf dem Barcode
+    fetchProductData(barcode).then(product => {
+        const productNames = [product.product_name || 'Unbekannt'];
+        const nutriScores = [getNutriScoreValue(product.nutriscore_grade)];
+        const caloriesPer100g = [calculatePer100g(product.nutriments && product.nutriments.energy_value, product.nutriments && product.nutriments.energy_unit)];
+        const sugarsPer100g = [calculatePer100g(product.nutriments && product.nutriments.sugars_value, product.nutriments && product.nutriments.sugars_unit)];
+        const fatsPer100g = [calculatePer100g(product.nutriments && product.nutriments.fat_value, product.nutriments && product.nutriments.fat_unit)];
+        const saltsPer100g = [calculatePer100g(product.nutriments && product.nutriments.salt_value, product.nutriments && product.nutriments.salt_unit)];
+
+        createChart('chart2', 'Kalorien pro 100g', productNames, caloriesPer100g, 'rgba(255, 99, 132, 0.2)', 'rgba(255, 99, 132, 1)', 70);
+        createChart('chart3', 'Zucker pro 100g', productNames, sugarsPer100g, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', 70);
+        createChart('chart4', 'Fett pro 100g', productNames, fatsPer100g, 'rgba(153, 102, 255, 0.2)', 'rgba(153, 102, 255, 1)', 70);
+        createChart('chart5', 'Salz pro 100g', productNames, saltsPer100g, 'rgba(255, 206, 86, 0.2)', 'rgba(255, 206, 86, 1)', 70);
+
+        displayProductDetails([product]);
+    });
+}
+
+function getNutriScoreValue(nutriScore) {
     switch (nutriScore) {
-        case 'A':
-            playSound(healthySound);
-            return 'Sehr gesund';
-        case 'B':
-            playSound(healthySound);
-            return 'Gesund';
-        case 'C':
-            playSound(moderateSound);
-            return 'Mäßig gesund';
-        case 'D':
-            playSound(unhealthySound);
-            return 'Ungesund';
-        case 'E':
-            playSound(unhealthySound);
-            return 'Sehr ungesund';
-        default:
-            return 'Unbekannt';
+        case 'a': return 1;
+        case 'b': return 2;
+        case 'c': return 3;
+        case 'd': return 4;
+        case 'e': return 5;
+        default: return 0;
     }
-}
-
-function playSound(sound) {
-
-    // Play the specified sound
-    sound.currentTime = 0; // Rewind to the beginning (in case it's already playing)
-    sound.play();
 }
