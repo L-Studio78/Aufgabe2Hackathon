@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Food Facts Gesundheit Check</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Gesundheitsbewertung von Lebensmitteln</h1>
+    <div id="input-container">
+        <input type="text" id="barcodes" placeholder="Geben Sie Barcodes ein, getrennt durch Leerzeichen">
+        <button id="fetch-data">Daten abrufen</button>
+    </div>
+    <div id="charts-container">
+        <canvas id="chart1"></canvas>
+        <canvas id="chart2"></canvas>
+        <canvas id="chart3"></canvas>
+        <canvas id="chart4"></canvas>
+        <canvas id="chart5"></canvas>
+    </div>
+    <div id="product-details"></div>
+    <script src="scripts.js"></script>
+</body>
+</html>
