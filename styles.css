@@ -201,3 +201,11 @@ canvas {
     align-items: center;
     justify-content: center;
 }
+.Logo{
+    height: 40px;
+    width: 40px;
+    position: fixed;
+    right: 20px;
+    top: 10px;
+    border-radius: 30px;
+  }

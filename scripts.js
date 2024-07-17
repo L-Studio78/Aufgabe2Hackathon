@@ -31,6 +31,7 @@ document.getElementById('fetch-data').addEventListener('click', function() {
 
         // Update allergen and vegan information
         updateProductDetails(products);
+        playSound(highestNutriScore);
     });
 });
 
@@ -273,4 +274,27 @@ function showSlide(index) {
     for (let i = 0; i < slides.length; i++) {
         slides[i].style.transform = `translateX(-${index * 100}%)`;
     }
+}
+
+function playSound(nutriScore) {
+    let soundFile;
+
+    switch (nutriScore) {
+        case 'a':
+            soundFile = 'Sounds/good.mp3';
+            break;
+        case 'b':
+        case 'c':
+            soundFile = 'Sounds/Okay.mp3';
+            break;
+        case 'd':
+        case 'e':
+            soundFile = 'Sounds/Bad.mp3';
+            break;
+        default:
+            return;
+    }
+
+    const audio = new Audio(soundFile);
+    audio.play();
 }
