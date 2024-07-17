@@ -154,6 +154,11 @@ canvas {
 .prev:hover, .next:hover {
     background-color: rgba(0,0,0,0.8);
 }
+
+
 .hidden {
     visibility: hidden;
+}
+.visible {
+    visibility: visible;
 }

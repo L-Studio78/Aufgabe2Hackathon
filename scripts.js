@@ -14,6 +14,8 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         const dailySugarNeeds = 50; // Annahme: Täglicher Zuckerbedarf
         const dailySaltNeeds = 5; // Annahme: Täglicher Salzbedarf
 
+        document.getElementById('hidden').innerHTML = '<h2>Tagesbedarf</h2>';
+
         updateProgressBar('calories-progress', 'Kalorien', totalCalories, dailyCalorieNeeds, 'kcal');
         updateProgressBar('sugar-progress', 'Zucker', totalSugars, dailySugarNeeds, 'g');
         updateProgressBar('salt-progress', 'Salz', totalSalts, dailySaltNeeds, 'g');
@@ -124,7 +126,6 @@ function getNutriScoreColor(score) {
     }
 }
 
-// Slider functionality
 let currentSlideIndex = 0;
 displayProjects();
 
