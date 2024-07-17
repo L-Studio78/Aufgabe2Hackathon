@@ -9,18 +9,22 @@ document.getElementById('fetch-data').addEventListener('click', function() {
 
         const totalQuantity = products.reduce((total, product) => total + parseFloat(product.quantity), 0);
 
-        const dailyCalorieNeeds = 2000; // Annahme: Täglicher Kalorienbedarf
+        const dailyCalorieNeeds = 10000; // Annahme: Täglicher Kalorienbedarf
         const dailySugarNeeds = 50; // Annahme: Täglicher Zuckerbedarf
         const dailySaltNeeds = 5; // Annahme: Täglicher Salzbedarf
+        const carbonFootprints = products.map(product => product.carbon_footprint);
+    
+        updateCarbonFootprintChart(carbonFootprints, totalQuantity);
 
 
         document.getElementById('hidden').innerHTML = '<h2>Tagesbedarf</h2>';
+        document.getElementById('sel').innerHTML = '<h2>Ökologischer Fußabdruck</h2>';
 
-        updateProgressBar('calories-progress', 'Kalorien', totalCalories, dailyCalorieNeeds, 'kcal');
+        updateProgressBar('calories-progress', 'Kalorien', totalCalories, dailyCalorieNeeds, 'kj');
         updateProgressBar('sugar-progress', 'Zucker', totalSugars, dailySugarNeeds, 'g');
         updateProgressBar('salt-progress', 'Salz', totalSalts, dailySaltNeeds, 'g');
 
-        updateChart('calories-chart', 'Kalorien (kcal) pro 100g', totalCalories, totalQuantity);
+        updateChart('calories-chart', 'Kalorien (kj) pro 100g', totalCalories, totalQuantity);
         updateChart('sugar-chart', 'Zucker (g) pro 100g', totalSugars, totalQuantity);
         updateChart('salt-chart', 'Salz (g) pro 100g', totalSalts, totalQuantity);
 
@@ -36,9 +40,18 @@ document.getElementById('fetch-data').addEventListener('click', function() {
 });
 
 function fetchProductData(barcode) {
-    return fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
-        .then(response => response.json())
+    const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok for ${url}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('API response:', data); // Debugging: Log the API response
+
             const product = data.product || {};
             return {
                 product_name: product.product_name || 'Unbekannt',
@@ -47,9 +60,47 @@ function fetchProductData(barcode) {
                 quantity: product.quantity || '100',
                 allergens: product.allergens_tags || [],
                 ingredients: product.ingredients_text || '',
-                vegan: product.labels_tags && product.labels_tags.includes('en:vegan') ? 'ja' : 'nein'
+                vegan: product.labels_tags && product.labels_tags.includes('en:vegan') ? 'ja' : 'nein',
+                carbon_footprint: product.carbon_footprint || 0
             };
+        })
+        .catch(error => {
+            console.error('Error fetching product data:', error);
+            // Handle errors or propagate them further as needed
+            throw error;
         });
+}
+
+function updateCarbonFootprintChart(carbonFootprints, totalQuantity) {
+    const ctx = document.getElementById('carbon-footprint-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Carbon Footprint (kg CO2eq) pro 100g'],
+            datasets: [{
+                label: 'Carbon Footprint (kg CO2eq) pro 100g',
+                data: [calculateCarbonFootprintPercentage(carbonFootprints, totalQuantity)],
+                backgroundColor: ['rgba(255, 99, 132, 0.2)'],
+                borderColor: ['rgba(255, 99, 132, 1)'],
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+function calculateCarbonFootprintPercentage(carbonFootprints, totalQuantity) {
+    if (!carbonFootprints || !totalQuantity) return 0;
+
+    const totalCarbonFootprint = carbonFootprints.reduce((total, footprint) => total + parseFloat(footprint), 0);
+    return (totalCarbonFootprint / totalQuantity) * 100;
 }
 
 function calculateTotalValue(value, unit, quantity) {
