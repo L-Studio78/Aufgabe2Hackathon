@@ -1,0 +1,34 @@
+# L-studio Projekt
+
+Dieses Projekt wurde im Rahmen eines Mini-Hackathons erstellt. Es ist ein webbasiertes Tool zur Gesundheitsbewertung von Lebensmitteln, das mithilfe der Open Food Facts API Daten zu Produkten abruft und verschiedene Nutri-Score-basierte Metriken berechnet.
+
+## Funktionen
+
+- **Produktdatenabruf**: Durch Eingabe von Barcodes können Nutzer Produktdaten wie Kalorien, Zucker- und Salzgehalt abrufen.
+  
+- **Gesundheitsbewertung**: Basierend auf den abgerufenen Daten werden Fortschrittsbalken und Diagramme für Kalorien, Zucker und Salz angezeigt, die den täglichen Bedarf gegenüberstellen.
+  
+- **Allergen- und Vegan-Informationen**: Das Tool bietet Informationen zu Allergenen und gibt Auskunft darüber, ob ein Produkt vegan ist.
+  
+- **Nutri-Score Visualisierung**: Die Hintergrundfarbe der Anwendung ändert sich entsprechend des höchsten Nutri-Scores der abgerufenen Produkte.
+
+## Technologien
+
+- HTML, CSS für das Frontend
+- JavaScript für die Logik und die Interaktion mit der Open Food Facts API
+- Chart.js und ProgressBar.js für die Visualisierungen
+- Open Food Facts API für die Produktdaten
+
+## Installation und Verwendung
+
+### Installation
+
+Das Projekt erfordert keine spezielle Installation. Laden Sie einfach die Dateien herunter oder klonen Sie das Repository.
+
+### Verwendung
+
+Öffnen Sie die `index.html`-Datei in Ihrem bevorzugten Webbrowser. Geben Sie die Barcodes der Produkte ein und klicken Sie auf "Daten abrufen", um die Gesundheitsbewertung zu sehen.
+
+## Autor
+
+Das Projekt "L-studio" wurde von [Ihr Name hier einfügen] entwickelt.

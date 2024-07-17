@@ -13,6 +13,7 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         const dailySugarNeeds = 50; // Annahme: Täglicher Zuckerbedarf
         const dailySaltNeeds = 5; // Annahme: Täglicher Salzbedarf
 
+
         document.getElementById('hidden').innerHTML = '<h2>Tagesbedarf</h2>';
 
         updateProgressBar('calories-progress', 'Kalorien', totalCalories, dailyCalorieNeeds, 'kcal');
@@ -26,7 +27,7 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         // Update background color based on Nutri-Score
         const nutriScores = products.map(product => product.nutriscore_grade);
         const highestNutriScore = getHighestNutriScore(nutriScores);
-        document.body.style.backgroundColor = getNutriScoreColor(highestNutriScore);
+        document.body.style.background = getNutriScoreColor(highestNutriScore);
 
         // Update allergen and vegan information
         updateProductDetails(products);
@@ -121,19 +122,20 @@ function getHighestNutriScore(nutriScores) {
 function getNutriScoreColor(score) {
     switch (score) {
         case 'a':
-            return '#4CAF50'; // Green
+            return 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)'; // Green to Light Green
         case 'b':
-            return '#8BC34A'; // Light Green
+            return 'linear-gradient(90deg, #8BC34A 0%, #FFEB3B 100%)'; // Light Green to Yellow
         case 'c':
-            return '#FFEB3B'; // Yellow
+            return 'linear-gradient(90deg, #FFEB3B 0%, #FF9800 100%)'; // Yellow to Orange
         case 'd':
-            return '#FF9800'; // Orange
+            return 'linear-gradient(90deg, #FF9800 0%, #F44336 100%)'; // Orange to Red
         case 'e':
-            return '#F44336'; // Red
+            return 'linear-gradient(90deg, #F44336 0%, #F44336 100%)'; // Red (single color)
         default:
-            return '#ffffff'; // White
+            return 'linear-gradient(90deg, #F44336 0%, #F44336 100%)'; // White (or another default color)
     }
 }
+
 
 function updateProductDetails(products) {
     const productDetailsContainer = document.getElementById('product-details');

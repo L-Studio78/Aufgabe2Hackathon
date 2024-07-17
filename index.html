@@ -10,6 +10,7 @@
 </head>
 <body>
     <h1>Gesundheitsbewertung von Lebensmitteln</h1>
+    <div id="hidde"></div>
     <div id="input-container">
         <input type="text" id="barcodes" placeholder="Geben Sie Barcodes ein, getrennt durch Leerzeichen">
         <button id="fetch-data">Daten abrufen</button>
@@ -35,9 +36,13 @@
         </div>
     </div>
     <div id="product-details"></div>
+
     <div class="Box">
         <div id="project-selection-container">
             <div id="project-selection" class="slideshow"></div>
+            <button class="prev" onclick="changeSlide(-1)">Prev</button>
+            <button class="next" onclick="changeSlide(1)">Next</button>
+
         </div>
     </div>
     <script src="scripts.js"></script>
