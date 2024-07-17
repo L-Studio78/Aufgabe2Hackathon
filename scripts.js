@@ -3,7 +3,6 @@ document.getElementById('fetch-data').addEventListener('click', function() {
     const productPromises = barcodes.map(barcode => fetchProductData(barcode));
 
     Promise.all(productPromises).then(products => {
-
         const totalCalories = products.reduce((total, product) => total + calculateTotalValue(product.nutriments && product.nutriments.energy_value, product.nutriments && product.nutriments.energy_unit, product.quantity), 0);
         const totalSugars = products.reduce((total, product) => total + calculateTotalValue(product.nutriments && product.nutriments.sugars_value, product.nutriments && product.nutriments.sugars_unit, product.quantity), 0);
         const totalSalts = products.reduce((total, product) => total + calculateTotalValue(product.nutriments && product.nutriments.salt_value, product.nutriments && product.nutriments.salt_unit, product.quantity), 0);
@@ -28,6 +27,9 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         const nutriScores = products.map(product => product.nutriscore_grade);
         const highestNutriScore = getHighestNutriScore(nutriScores);
         document.body.style.backgroundColor = getNutriScoreColor(highestNutriScore);
+
+        // Update allergen and vegan information
+        updateProductDetails(products);
     });
 });
 
@@ -40,7 +42,10 @@ function fetchProductData(barcode) {
                 product_name: product.product_name || 'Unbekannt',
                 nutriscore_grade: product.nutriscore_grade || 'Keine Angabe',
                 nutriments: product.nutriments || {},
-                quantity: product.quantity || '100'
+                quantity: product.quantity || '100',
+                allergens: product.allergens_tags || [],
+                ingredients: product.ingredients_text || '',
+                vegan: product.labels_tags && product.labels_tags.includes('en:vegan') ? 'ja' : 'nein'
             };
         });
 }
@@ -54,6 +59,8 @@ function calculateTotalValue(value, unit, quantity) {
 }
 
 function updateProgressBar(progressBarId, label, value, dailyNeeds, unit) {
+    if (!value || !dailyNeeds) return;
+
     const progressBar = new ProgressBar.Circle(`#${progressBarId}`, {
         strokeWidth: 6,
         easing: 'easeInOut',
@@ -72,6 +79,8 @@ function updateProgressBar(progressBarId, label, value, dailyNeeds, unit) {
 }
 
 function updateChart(chartId, label, value, totalQuantity) {
+    if (!value || !totalQuantity) return;
+
     const ctx = document.getElementById(chartId).getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -124,6 +133,80 @@ function getNutriScoreColor(score) {
         default:
             return '#ffffff'; // White
     }
+}
+
+function updateProductDetails(products) {
+    const productDetailsContainer = document.getElementById('product-details');
+    productDetailsContainer.innerHTML = '';
+
+    products.forEach(product => {
+        const productDiv = document.createElement('div');
+        productDiv.classList.add('product-details');
+
+        const allergenInfo = getAllergenInfo(product.allergens, product.ingredients);
+        const veganInfo = product.vegan === 'ja' ? '🌱 Vegan' : '❌ Nicht vegan';
+
+        productDiv.innerHTML = `
+            <div class="hidden">
+                <h2>Unverträglichkeit<h2/>
+            </div>
+            <div class="allergen-info">
+                <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Gluten') ? 'red' : 'green'};">
+                    <span style="font-size: 40px;">🌾</span>
+                    <span>Gluten</span>
+                </div>
+                <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Milch') ? 'red' : 'green'};">
+                    <span style="font-size: 40px;">🥛</span>
+                    <span>Milch</span>
+                </div>
+                <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Eier') ? 'red' : 'green'};">
+                    <span style="font-size: 40px;">🥚</span>
+                    <span>Eier</span>
+                </div>
+                <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Nüsse') ? 'red' : 'green'};">
+                    <span style="font-size: 40px;">🥜</span>
+                    <span>Nüsse</span>
+                </div>
+                <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Soja') ? 'red' : 'green'};">
+                    <span style="font-size: 40px;">🌱</span>
+                    <span>Soja</span>
+                </div>
+                <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Fisch') ? 'red' : 'green'};">
+                    <span style="font-size: 40px;">🐟</span>
+                    <span>Fisch</span>
+                </div>
+            </div>
+
+            <br><br><br>
+
+            <div class="allergen-info">
+                <span>${veganInfo}</span>
+            </div>
+        `;
+
+        productDetailsContainer.appendChild(productDiv);
+    });
+}
+
+function getAllergenInfo(allergens, ingredients) {
+    const allergenMap = {
+        gluten: '🌾 Gluten',
+        milk: '🥛 Milch',
+        eggs: '🥚 Eier',
+        nuts: '🥜 Nüsse',
+        soy: '🌱 Soja',
+        fish: '🐟 Fisch'
+    };
+
+    let allergenInfo = '';
+
+    Object.keys(allergenMap).forEach(key => {
+        if (allergens.includes(`en:${key}`) || ingredients.toLowerCase().includes(key)) {
+            allergenInfo += `${allergenMap[key]}, `;
+        }
+    });
+
+    return allergenInfo.length > 0 ? allergenInfo.slice(0, -2) : 'Keine bekannten Allergene';
 }
 
 let currentSlideIndex = 0;
