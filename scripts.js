@@ -3,56 +3,31 @@ document.getElementById('fetch-data').addEventListener('click', function() {
     const productPromises = barcodes.map(barcode => fetchProductData(barcode));
 
     Promise.all(productPromises).then(products => {
-        const productNames = products.map(product => product.product_name || 'Unbekannt');
-        const nutriScores = products.map(product => {
-            switch (product.nutriscore_grade) {
-                case 'a': return 1;
-                case 'b': return 2;
-                case 'c': return 3;
-                case 'd': return 4;
-                case 'e': return 5;
-                default: return 0;
-            }
-        });
-        const caloriesPer100g = products.map(product => calculatePer100g(product.nutriments && product.nutriments.energy_value, product.nutriments && product.nutriments.energy_unit));
-        const sugarsPer100g = products.map(product => calculatePer100g(product.nutriments && product.nutriments.sugars_value, product.nutriments && product.nutriments.sugars_unit));
-        const fatsPer100g = products.map(product => calculatePer100g(product.nutriments && product.nutriments.fat_value, product.nutriments && product.nutriments.fat_unit));
-        const saltsPer100g = products.map(product => calculatePer100g(product.nutriments && product.nutriments.salt_value, product.nutriments && product.nutriments.salt_unit));
 
-        createChart('chart2', 'Kalorien pro 100g', productNames, caloriesPer100g, 'rgba(255, 99, 132, 0.2)', 'rgba(255, 99, 132, 1)', 70);
-        createChart('chart3', 'Zucker pro 100g', productNames, sugarsPer100g, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', 70);
-        createChart('chart4', 'Fett pro 100g', productNames, fatsPer100g, 'rgba(153, 102, 255, 0.2)', 'rgba(153, 102, 255, 1)', 70);
-        createChart('chart5', 'Salz pro 100g', productNames, saltsPer100g, 'rgba(255, 206, 86, 0.2)', 'rgba(255, 206, 86, 1)', 70);
+        const totalCalories = products.reduce((total, product) => total + calculateTotalValue(product.nutriments && product.nutriments.energy_value, product.nutriments && product.nutriments.energy_unit, product.quantity), 0);
+        const totalSugars = products.reduce((total, product) => total + calculateTotalValue(product.nutriments && product.nutriments.sugars_value, product.nutriments && product.nutriments.sugars_unit, product.quantity), 0);
+        const totalSalts = products.reduce((total, product) => total + calculateTotalValue(product.nutriments && product.nutriments.salt_value, product.nutriments && product.nutriments.salt_unit, product.quantity), 0);
 
-        // Determine background color based on average Nutri-Score
-        const averageNutriScore = calculateAverageNutriScore(nutriScores);
-        changeBackgroundColor(averageNutriScore);
+        const totalQuantity = products.reduce((total, product) => total + parseFloat(product.quantity), 0);
 
-        displayProductDetails(products);
-        updateProgressBars(caloriesPer100g, sugarsPer100g, fatsPer100g, saltsPer100g);
+        const dailyCalorieNeeds = 2000; // Annahme: Täglicher Kalorienbedarf
+        const dailySugarNeeds = 50; // Annahme: Täglicher Zuckerbedarf
+        const dailySaltNeeds = 5; // Annahme: Täglicher Salzbedarf
+
+        updateProgressBar('calories-progress', 'Kalorien', totalCalories, dailyCalorieNeeds, 'kcal');
+        updateProgressBar('sugar-progress', 'Zucker', totalSugars, dailySugarNeeds, 'g');
+        updateProgressBar('salt-progress', 'Salz', totalSalts, dailySaltNeeds, 'g');
+
+        updateChart('calories-chart', 'Kalorien (kcal) pro 100g', totalCalories, totalQuantity);
+        updateChart('sugar-chart', 'Zucker (g) pro 100g', totalSugars, totalQuantity);
+        updateChart('salt-chart', 'Salz (g) pro 100g', totalSalts, totalQuantity);
+
+        // Update background color based on Nutri-Score
+        const nutriScores = products.map(product => product.nutriscore_grade);
+        const highestNutriScore = getHighestNutriScore(nutriScores);
+        document.body.style.backgroundColor = getNutriScoreColor(highestNutriScore);
     });
 });
-
-function updateProgressBars(calories, sugars, fats, salts) {
-    const totalCalories = calories.reduce((a, b) => a + b, 0);
-    const totalSugars = sugars.reduce((a, b) => a + b, 0);
-    const totalFats = fats.reduce((a, b) => a + b, 0);
-    const totalSalts = salts.reduce((a, b) => a + b, 0);
-
-    updateProgressBar('calories-progress', 'calories-text', totalCalories, 2000);
-    updateProgressBar('sugar-progress', 'sugar-text', totalSugars, 50);
-    updateProgressBar('fat-progress', 'fat-text', totalFats, 70);
-    updateProgressBar('salt-progress', 'salt-text', totalSalts, 6);
-}
-
-function updateProgressBar(progressBarId, textId, value, maxValue) {
-    const progressBar = document.getElementById(progressBarId);
-    const text = document.getElementById(textId);
-    const percentage = Math.min(100, (value / maxValue) * 100);
-
-    progressBar.querySelector('span').innerText = `${textId.split('-')[0]}: ${value}/${maxValue}`;
-    progressBar.querySelector('::before').style.width = percentage + '%';
-}
 
 function fetchProductData(barcode) {
     return fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
@@ -63,35 +38,48 @@ function fetchProductData(barcode) {
                 product_name: product.product_name || 'Unbekannt',
                 nutriscore_grade: product.nutriscore_grade || 'Keine Angabe',
                 nutriments: product.nutriments || {},
-                quantity: product.quantity || 100
+                quantity: product.quantity || '100'
             };
         });
 }
 
-function calculatePer100g(value, unit) {
-    if (!value || !unit) return 0;
+function calculateTotalValue(value, unit, quantity) {
+    if (!value || !unit || !quantity) return 0;
 
-    // Convert the value to per 100g
-    switch (unit.toLowerCase()) {
-        case 'kj':
-        case 'kcal':
-            return parseFloat((value / 100).toFixed(2)); // Energy values are typically in kJ or kcal per 100g
-        default:
-            return parseFloat((value * 100 / 100).toFixed(2)); // Assume other nutrients are per 100g/ml
-    }
+    const valuePer100g = parseFloat(value);
+    const totalQuantity = parseFloat(quantity);
+    return (valuePer100g * totalQuantity) / 100;
 }
 
-function createChart(canvasId, label, labels, data, backgroundColor, borderColor, maxYValue) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+function updateProgressBar(progressBarId, label, value, dailyNeeds, unit) {
+    const progressBar = new ProgressBar.Circle(`#${progressBarId}`, {
+        strokeWidth: 6,
+        easing: 'easeInOut',
+        duration: 1400,
+        color: '#4CAF50', // Grün
+        trailColor: '#eee',
+        trailWidth: 1,
+        svgStyle: null
+    });
+
+    const percentage = Math.min(100, (value / dailyNeeds) * 100);
+    progressBar.animate(percentage / 100);
+
+    const formattedValue = `${value.toFixed(2)} ${unit}`;
+    progressBar.setText(formattedValue);
+}
+
+function updateChart(chartId, label, value, totalQuantity) {
+    const ctx = document.getElementById(chartId).getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: [label],
             datasets: [{
                 label: label,
-                data: data,
-                backgroundColor: backgroundColor,
-                borderColor: borderColor,
+                data: [(value / totalQuantity * 100).toFixed(2)],
+                backgroundColor: ['rgba(75, 192, 192, 0.2)'],
+                borderColor: ['rgba(75, 192, 192, 1)'],
                 borderWidth: 1
             }]
         },
@@ -99,89 +87,80 @@ function createChart(canvasId, label, labels, data, backgroundColor, borderColor
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: maxYValue
+                    max: 100
                 }
             }
         }
     });
 }
 
-function changeBackgroundColor(nutriScore) {
-    const body = document.body;
-    let color = '';
+function getHighestNutriScore(nutriScores) {
+    const scoreOrder = ['a', 'b', 'c', 'd', 'e'];
+    let highestScore = 'e';
 
-    switch (nutriScore) {
-        case 1:
-            color = '#4CAF50';
-            break;
-        case 2:
-            color = '#8BC34A';
-            break;
-        case 3:
-            color = '#FFC107';
-            break;
-        case 4:
-            color = '#FF9800';
-            break;
-        case 5:
-            color = '#F44336';
-            break;
-        default:
-            color = '#FFFFFF';
-            break;
+    for (const score of nutriScores) {
+        if (scoreOrder.indexOf(score) < scoreOrder.indexOf(highestScore)) {
+            highestScore = score;
+        }
     }
 
-    body.style.backgroundColor = color;
+    return highestScore;
 }
 
-function calculateAverageNutriScore(nutriScores) {
-    const sum = nutriScores.reduce((a, b) => a + b, 0);
-    return Math.round(sum / nutriScores.length);
+function getNutriScoreColor(score) {
+    switch (score) {
+        case 'a':
+            return '#4CAF50'; // Green
+        case 'b':
+            return '#8BC34A'; // Light Green
+        case 'c':
+            return '#FFEB3B'; // Yellow
+        case 'd':
+            return '#FF9800'; // Orange
+        case 'e':
+            return '#F44336'; // Red
+        default:
+            return '#ffffff'; // White
+    }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    displayProjectSelection();
-    setInterval(() => {
-        changeSlide(1); // Wechselt zur nächsten Folie
-    }, 3000); // Wechselt alle 3 Sekunden
-});
-
+// Slider functionality
 let currentSlideIndex = 0;
+displayProjects();
 
-function displayProjectSelection() {
+function displayProjects() {
     const projects = [
         {
             name: "Projekt 1",
-            description: "Beschreibung des Projekts 1",
-            barcode: "1234567890123",
-            imageUrl: "path/to/image1.jpg" // Pfad zum Bild des Projekts
+            description: "Beschreibung des ersten Projekts",
+            barcode: "123456789",
+            imageUrl: "image1.jpg"
         },
         {
             name: "Projekt 2",
-            description: "Beschreibung des Projekts 2",
-            barcode: "2345678901234",
-            imageUrl: "path/to/image2.jpg"
+            description: "Beschreibung des zweiten Projekts",
+            barcode: "987654321",
+            imageUrl: "image2.jpg"
         },
         {
             name: "Projekt 3",
-            description: "Beschreibung des Projekts 3",
-            barcode: "3456789012345",
-            imageUrl: "path/to/image3.jpg"
+            description: "Beschreibung des dritten Projekts",
+            barcode: "567891234",
+            imageUrl: "image3.jpg"
         }
     ];
 
     const projectSelectionContainer = document.getElementById('project-selection');
-    projectSelectionContainer.innerHTML = ''; // Clear previous content
+    projectSelectionContainer.innerHTML = '';
 
-    projects.forEach((project, index) => {
+    projects.forEach(project => {
         const projectDiv = document.createElement('div');
-        projectDiv.className = 'project';
-
+        projectDiv.classList.add('project');
         projectDiv.innerHTML = `
             <img src="${project.imageUrl}" alt="${project.name}">
             <h3>${project.name}</h3>
             <p>${project.description}</p>
-            <button onclick="fetchProjectData('${project.barcode}')">Daten abrufen</button>
+            <button onclick="fetchProductData('${project.barcode}')">Daten abrufen</button>
         `;
 
         projectSelectionContainer.appendChild(projectDiv);
@@ -190,46 +169,22 @@ function displayProjectSelection() {
     showSlide(currentSlideIndex);
 }
 
-function showSlide(index) {
-    const slides = document.getElementsByClassName('project');
-    if (index >= slides.length) { currentSlideIndex = 0; }
-    if (index < 0) { currentSlideIndex = slides.length - 1; }
-    for (let i = 0; i < slides.length; i++) {
-        slides[i].style.transform = `translateX(${(-currentSlideIndex * 100)}%)`;
-    }
-}
+function changeSlide(step) {
+    currentSlideIndex += step;
 
-function changeSlide(direction) {
-    currentSlideIndex += direction;
+    const slides = document.getElementsByClassName('project');
+    if (currentSlideIndex >= slides.length) {
+        currentSlideIndex = 0;
+    } else if (currentSlideIndex < 0) {
+        currentSlideIndex = slides.length - 1;
+    }
+
     showSlide(currentSlideIndex);
 }
 
-function fetchProjectData(barcode) {
-    // Funktion zum Abrufen von Projektdaten basierend auf dem Barcode
-    fetchProductData(barcode).then(product => {
-        const productNames = [product.product_name || 'Unbekannt'];
-        const nutriScores = [getNutriScoreValue(product.nutriscore_grade)];
-        const caloriesPer100g = [calculatePer100g(product.nutriments && product.nutriments.energy_value, product.nutriments && product.nutriments.energy_unit)];
-        const sugarsPer100g = [calculatePer100g(product.nutriments && product.nutriments.sugars_value, product.nutriments && product.nutriments.sugars_unit)];
-        const fatsPer100g = [calculatePer100g(product.nutriments && product.nutriments.fat_value, product.nutriments && product.nutriments.fat_unit)];
-        const saltsPer100g = [calculatePer100g(product.nutriments && product.nutriments.salt_value, product.nutriments && product.nutriments.salt_unit)];
-
-        createChart('chart2', 'Kalorien pro 100g', productNames, caloriesPer100g, 'rgba(255, 99, 132, 0.2)', 'rgba(255, 99, 132, 1)', 70);
-        createChart('chart3', 'Zucker pro 100g', productNames, sugarsPer100g, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', 70);
-        createChart('chart4', 'Fett pro 100g', productNames, fatsPer100g, 'rgba(153, 102, 255, 0.2)', 'rgba(153, 102, 255, 1)', 70);
-        createChart('chart5', 'Salz pro 100g', productNames, saltsPer100g, 'rgba(255, 206, 86, 0.2)', 'rgba(255, 206, 86, 1)', 70);
-
-        displayProductDetails([product]);
-    });
-}
-
-function getNutriScoreValue(nutriScore) {
-    switch (nutriScore) {
-        case 'a': return 1;
-        case 'b': return 2;
-        case 'c': return 3;
-        case 'd': return 4;
-        case 'e': return 5;
-        default: return 0;
+function showSlide(index) {
+    const slides = document.getElementsByClassName('project');
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].style.transform = `translateX(-${index * 100}%)`;
     }
 }

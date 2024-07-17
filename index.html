@@ -6,6 +6,7 @@
     <title>Open Food Facts Gesundheit Check</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
 </head>
 <body>
     <h1>Gesundheitsbewertung von Lebensmitteln</h1>
@@ -14,21 +15,32 @@
         <button id="fetch-data">Daten abrufen</button>
     </div>
     <div id="charts-container">
-        <canvas id="chart1"></canvas>
-        <canvas id="chart2"></canvas>
-        <canvas id="chart3"></canvas>
-        <canvas id="chart4"></canvas>
-        <canvas id="chart5"></canvas>
+        <div id="calories-container">
+            <canvas id="calories-chart"></canvas>
+        </div>
+        <div id="sugar-container">
+            <canvas id="sugar-chart"></canvas>
+        </div>
+        <div id="salt-container">
+            <canvas id="salt-chart"></canvas>
+        </div>
+    </div>
+
+    <div id="progressbars-container">
+        <h2 class="hidden">Tagesbedarf</h2>
+
+        <div>
+            <div id="calories-progress" class="progressbar"></div>
+            <div id="sugar-progress" class="progressbar"></div>
+            <div id="salt-progress" class="progressbar"></div>
+        </div>
     </div>
     <div id="product-details"></div>
-    <h2>Ausgewählte Projekte</h2>
-    <div id="project-selection-container">
-        <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
-        <div id="project-selection" class="slideshow"></div>
-        <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    <div class="Box">
+        <div id="project-selection-container">
+            <div id="project-selection" class="slideshow"></div>
+        </div>
     </div>
-
-
     <script src="scripts.js"></script>
 </body>
 </html>
