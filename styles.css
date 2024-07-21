@@ -144,6 +144,9 @@ canvas {
 }
 
 .prev, .next {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     position: absolute;
     top: 50%;
@@ -225,3 +228,86 @@ canvas {
     top: 10px;
     border-radius: 30px;
   }
+.icon-container img {
+    width: 50px;
+    height: 50px;
+}
+
+.icon-container:hover {
+    border-color: #000;
+}
+
+/* Medienabfragen für Mobilgeräte */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    #input-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #barcodes {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    button {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    #charts-container {
+        flex-direction: column;
+    }
+
+    canvas {
+        max-width: 100%;
+        max-height: 200px;
+        margin: 10px 0;
+    }
+
+    #progressbars-container, #carbon-footprint-container, .Box {
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+    }
+
+    .progressbar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .allergen-info {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .icon-container {
+        width: 80px;
+        height: 80px;
+        margin: 10px 0;
+    }
+
+    .project {
+        min-width: 100%;
+    }
+
+    .prev, .next {
+        width: 30px;
+        height: 30px;
+        font-size: 10px;
+        margin-top: -15px;
+    }
+
+    /* Zusätzliche Regel für Buttons in der Produktvorschau */
+    .project button {
+        font-size: 12px;
+        padding: 8px 16px;
+    }
+}

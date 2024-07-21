@@ -271,7 +271,7 @@ function displayProjects() {
         {
             name: "Projekt 1",
             description: "Beschreibung des ersten Projekts",
-            barcode: "123456789",
+            barcode: "5059697734953",
             imageUrl: "image1.jpg"
         },
         {
@@ -335,10 +335,14 @@ function playSound(nutriScore) {
             soundFile = 'Sounds/good.mp3';
             break;
         case 'b':
+            soundFile = 'Sounds/Okay.mp3';
+            break;
         case 'c':
             soundFile = 'Sounds/Okay.mp3';
             break;
         case 'd':
+            soundFile = 'Sounds/Bad.mp3';
+            break;
         case 'e':
             soundFile = 'Sounds/Bad.mp3';
             break;
