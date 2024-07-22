@@ -38,6 +38,9 @@ button {
     justify-content: center;
     margin: 20px;
     width: 100%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-top: 20px;
 }
 
 canvas {
@@ -57,12 +60,12 @@ canvas {
     border-radius: 10px;
     width: 100%;
     margin: 20px 0;
-    padding-top: 20px;
-    padding-bottom: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 .carbon-footprint-chart{
     height: 200px;
@@ -165,6 +168,31 @@ canvas {
 .next {
     right: 0;
     border-radius: 3px 0 0 3px;
+}
+
+/* Beispiel-CSS-Stile */
+#barcode-display-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 20px;
+    background-color: #fff;
+    background-color: #fff;
+    border-radius: 8px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+#barcode-svg {
+    margin-top: 10px;
+}
+
+#product-name-display {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
 .prev {

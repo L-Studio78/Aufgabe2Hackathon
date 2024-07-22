@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+
 </head>
 <body>
     <img class="Logo" src="Logo.jpg" alt="">
@@ -15,6 +17,10 @@
     <div id="input-container">
         <input type="text" id="barcodes" placeholder="Geben Sie Barcodes ein, getrennt durch Leerzeichen">
         <button id="fetch-data">Daten abrufen</button>
+    </div>
+    <div id="barcode-display-container">
+        <div id="product-name-display"></div>
+        <svg id="barcode-svg"></svg>
     </div>
     <div id="charts-container">
         <div id="calories-container">

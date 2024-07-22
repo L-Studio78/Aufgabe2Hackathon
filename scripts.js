@@ -13,9 +13,8 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         const dailySugarNeeds = 50; // Annahme: Täglicher Zuckerbedarf
         const dailySaltNeeds = 5; // Annahme: Täglicher Salzbedarf
         const carbonFootprints = products.map(product => product.carbon_footprint);
-    
-        updateCarbonFootprintChart(carbonFootprints, totalQuantity);
 
+        updateCarbonFootprintChart(carbonFootprints, totalQuantity);
 
         document.getElementById('hidden').innerHTML = '<h2>Tagesbedarf</h2>';
         document.getElementById('sel').innerHTML = '<h2>Ökologischer Fußabdruck</h2>';
@@ -36,6 +35,11 @@ document.getElementById('fetch-data').addEventListener('click', function() {
         // Update allergen and vegan information
         updateProductDetails(products);
         playSound(highestNutriScore);
+
+        // Display product info for the first product
+        if (products.length > 0) {
+            displayProductInfo(products[0].product_name, barcodes[0], products[0].barcode_format);
+        }
     });
 });
 
@@ -61,7 +65,8 @@ function fetchProductData(barcode) {
                 allergens: product.allergens_tags || [],
                 ingredients: product.ingredients_text || '',
                 vegan: product.labels_tags && product.labels_tags.includes('en:vegan') ? 'ja' : 'nein',
-                carbon_footprint: product.carbon_footprint || 0
+                carbon_footprint: product.carbon_footprint || 0,
+                barcode_format: detectBarcodeFormat(barcode)
             };
         })
         .catch(error => {
@@ -69,6 +74,19 @@ function fetchProductData(barcode) {
             // Handle errors or propagate them further as needed
             throw error;
         });
+}
+
+function detectBarcodeFormat(barcode) {
+    if (barcode.length === 8) {
+        return 'EAN8';
+    } else if (barcode.length === 12) {
+        return 'UPC';
+    } else if (barcode.length === 13) {
+        return 'EAN13';
+    } else if (barcode.length === 14) {
+        return 'EAN14';
+    }
+    return 'UNKNOWN';
 }
 
 function updateCarbonFootprintChart(carbonFootprints, totalQuantity) {
@@ -184,10 +202,9 @@ function getNutriScoreColor(score) {
         case 'e':
             return 'linear-gradient(90deg, #F44336 0%, #F44336 100%)'; // Red (single color)
         default:
-            return 'linear-gradient(90deg, #F44336 0%, #F44336 100%)'; // White (or another default color)
+            return 'linear-gradient(90deg, #F44336 0%, #F44336 100%)'; // Default color
     }
 }
-
 
 function updateProductDetails(products) {
     const productDetailsContainer = document.getElementById('product-details');
@@ -202,7 +219,7 @@ function updateProductDetails(products) {
 
         productDiv.innerHTML = `
             <div class="hidden">
-                <h2>Unverträglichkeit<h2/>
+                <h2>Unverträglichkeit</h2>
             </div>
             <div class="allergen-info">
                 <div class="icon-container" style="border: 2px solid ${allergenInfo.includes('Gluten') ? 'red' : 'green'};">
@@ -352,4 +369,19 @@ function playSound(nutriScore) {
 
     const audio = new Audio(soundFile);
     audio.play();
+}
+
+function displayProductInfo(productName, barcode, format) {
+    document.getElementById('product-name-display').textContent = productName;
+
+    if (barcode) {
+        JsBarcode('#barcode-svg', barcode, {
+            format: format,
+            width: 2,
+            height: 100, // Erhöht für bessere Sichtbarkeit
+            displayValue: true
+        });
+    } else {
+        console.error('Kein Barcode zum Anzeigen vorhanden.');
+    }
 }
